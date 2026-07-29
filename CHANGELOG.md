@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.8
+
+- Added signed Sparkle updates backed by the GitHub release feed.
+- Added automatic-update and manual “check now” controls to settings.
+- Automatic update checks run once per day and can be disabled.
+
+## 1.7.0
+
+- Added an optional screen-frame style with a permanent black fill, subtle
+  stroke, and a rounded bottom-left corner.
+- Added an independent switch for showing or hiding the screen-frame stroke.
+- Reduced background work by refreshing once per second, skipping wallpaper
+  sampling in screen-frame mode, and using fixed-size color histograms.
+
 ## 1.6.0
 
 - Added live clock-area background sampling that follows wallpaper and Space

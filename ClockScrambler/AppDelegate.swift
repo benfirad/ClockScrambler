@@ -1,5 +1,6 @@
 import AppKit
 import CoreAudio
+import Sparkle
 
 @_silgen_name("CGWindowListCreateImage")
 private func legacyWindowListCreateImage(
@@ -122,6 +123,26 @@ private final class OverlaySettings {
         }
         set {
             defaults.set(newValue, forKey: "privacyColorsEnabled")
+            onChange?()
+        }
+    }
+
+    var screenFrameStyleEnabled: Bool {
+        get { defaults.bool(forKey: "screenFrameStyleEnabled") }
+        set {
+            defaults.set(newValue, forKey: "screenFrameStyleEnabled")
+            onChange?()
+        }
+    }
+
+    var screenFrameStrokeEnabled: Bool {
+        get {
+            defaults.object(forKey: "screenFrameStrokeEnabled") == nil
+                ? true
+                : defaults.bool(forKey: "screenFrameStrokeEnabled")
+        }
+        set {
+            defaults.set(newValue, forKey: "screenFrameStrokeEnabled")
             onChange?()
         }
     }
@@ -268,6 +289,8 @@ private final class OverlaySettings {
             "emoji",
             "displayMode",
             "privacyColorsEnabled",
+            "screenFrameStyleEnabled",
+            "screenFrameStrokeEnabled",
             "clockLanguage",
             "edgeAnchor",
             "systemClockFace",
@@ -395,6 +418,9 @@ private final class OverlaySettings {
     }
 
     var foregroundColor: NSColor {
+        if screenFrameStyleEnabled {
+            return .white
+        }
         if isFullScreenActive || (privacyColorsEnabled && systemActivity != .normal) {
             return .white
         }
@@ -414,6 +440,9 @@ private final class OverlaySettings {
     }
 
     var solidBackgroundColor: NSColor? {
+        if screenFrameStyleEnabled {
+            return .black
+        }
         if isFullScreenActive {
             return NSColor(
                 srgbRed: 0,
@@ -434,7 +463,7 @@ private final class OverlaySettings {
     }
 
     var cornerRadius: CGFloat {
-        edgeAnchor == .free ? 6 : 0
+        screenFrameStyleEnabled ? 12 : (edgeAnchor == .free ? 6 : 0)
     }
 }
 
@@ -615,15 +644,20 @@ private final class EmojiOverlayView: NSView {
 
 private final class SettingsWindowController: NSWindowController, NSTextFieldDelegate {
     private let settings: OverlaySettings
+    private let updaterController: SPUStandardUpdaterController
     private var valueLabels: [Int: NSTextField] = [:]
     private weak var positionPresetButton: NSPopUpButton?
     private weak var edgeAnchorControl: NSSegmentedControl?
 
-    init(settings: OverlaySettings) {
+    init(
+        settings: OverlaySettings,
+        updaterController: SPUStandardUpdaterController
+    ) {
         self.settings = settings
+        self.updaterController = updaterController
 
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 430, height: 680),
+            contentRect: NSRect(x: 0, y: 0, width: 430, height: 825),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -792,6 +826,44 @@ private final class SettingsWindowController: NSWindowController, NSTextFieldDel
         privacyColors.state = settings.privacyColorsEnabled ? .on : .off
         stack.addArrangedSubview(row(label: "Canlı renk", control: privacyColors))
 
+        let screenFrameStyle = NSButton(
+            checkboxWithTitle: "Siyah, çizgili ve sol altı yuvarlak",
+            target: self,
+            action: #selector(screenFrameStyleChanged(_:))
+        )
+        screenFrameStyle.state = settings.screenFrameStyleEnabled ? .on : .off
+        stack.addArrangedSubview(row(label: "Ekran çerçevesi", control: screenFrameStyle))
+
+        let screenFrameStroke = NSButton(
+            checkboxWithTitle: "İnce dış çizgiyi göster",
+            target: self,
+            action: #selector(screenFrameStrokeChanged(_:))
+        )
+        screenFrameStroke.state = settings.screenFrameStrokeEnabled ? .on : .off
+        stack.addArrangedSubview(row(label: "Çerçeve çizgisi", control: screenFrameStroke))
+
+        let automaticUpdates = NSButton(
+            checkboxWithTitle: "Otomatik indir ve yükle",
+            target: self,
+            action: #selector(automaticUpdatesChanged(_:))
+        )
+        automaticUpdates.state =
+            updaterController.updater.automaticallyChecksForUpdates ? .on : .off
+
+        let checkForUpdates = NSButton(
+            title: "Şimdi denetle",
+            target: self,
+            action: #selector(checkForUpdates)
+        )
+
+        let updateControls = NSStackView()
+        updateControls.orientation = .horizontal
+        updateControls.spacing = 8
+        updateControls.addArrangedSubview(automaticUpdates)
+        updateControls.addArrangedSubview(NSView())
+        updateControls.addArrangedSubview(checkForUpdates)
+        stack.addArrangedSubview(row(label: "Güncellemeler", control: updateControls))
+
         let buttons = NSStackView()
         buttons.orientation = .horizontal
         buttons.spacing = 10
@@ -939,6 +1011,24 @@ private final class SettingsWindowController: NSWindowController, NSTextFieldDel
         settings.privacyColorsEnabled = sender.state == .on
     }
 
+    @objc private func screenFrameStyleChanged(_ sender: NSButton) {
+        settings.screenFrameStyleEnabled = sender.state == .on
+    }
+
+    @objc private func screenFrameStrokeChanged(_ sender: NSButton) {
+        settings.screenFrameStrokeEnabled = sender.state == .on
+    }
+
+    @objc private func automaticUpdatesChanged(_ sender: NSButton) {
+        let enabled = sender.state == .on
+        updaterController.updater.automaticallyChecksForUpdates = enabled
+        updaterController.updater.automaticallyDownloadsUpdates = enabled
+    }
+
+    @objc private func checkForUpdates() {
+        updaterController.checkForUpdates(nil)
+    }
+
     @objc private func closeSettings() {
         close()
     }
@@ -951,6 +1041,11 @@ private final class SettingsWindowController: NSWindowController, NSTextFieldDel
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let settings = OverlaySettings()
+    private lazy var updaterController = SPUStandardUpdaterController(
+        startingUpdater: true,
+        updaterDelegate: nil,
+        userDriverDelegate: nil
+    )
     private var overlays: [NSPanel] = []
     private var overlayViews: [EmojiOverlayView] = []
     private var refreshTimer: Timer?
@@ -959,6 +1054,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var lastMenuBarSampleDate = Date.distantPast
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        _ = updaterController
         settings.onChange = { [weak self] in
             self?.refreshOverlays()
         }
@@ -978,12 +1074,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
 
         refreshTimer = Timer.scheduledTimer(
-            timeInterval: 0.5,
+            timeInterval: 1,
             target: self,
             selector: #selector(refreshOverlays),
             userInfo: nil,
             repeats: true
         )
+        refreshTimer?.tolerance = 0.2
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -1015,22 +1112,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        settings.systemActivity = detectSystemActivity()
-        settings.isFullScreenActive = screens.contains {
-            isFullScreenApplicationVisible(on: $0)
+        if settings.screenFrameStyleEnabled {
+            settings.systemActivity = .normal
+            settings.isFullScreenActive = false
+        } else {
+            settings.systemActivity = detectSystemActivity()
+            settings.isFullScreenActive = screens.contains {
+                isFullScreenApplicationVisible(on: $0)
+            }
         }
         updateSampledMenuBarColorIfNeeded(on: screens.first)
 
         for (panel, screen) in zip(overlays, screens) {
             panel.setFrame(overlayFrame(for: screen), display: true)
             configureBackground(of: panel)
-            panel.orderFrontRegardless()
         }
         overlayViews.forEach { $0.needsDisplay = true }
     }
 
     private func updateSampledMenuBarColorIfNeeded(on screen: NSScreen?) {
         guard
+            !settings.screenFrameStyleEnabled,
             !settings.isFullScreenActive,
             settings.systemActivity == .normal,
             let screen,
@@ -1124,35 +1226,42 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let startX = 0
         let verticalInset = min(3, max(0, imageHeight / 10))
 
-        var reds: [UInt8] = []
-        var greens: [UInt8] = []
-        var blues: [UInt8] = []
-        reds.reserveCapacity(sampleWidth * imageHeight)
-        greens.reserveCapacity(sampleWidth * imageHeight)
-        blues.reserveCapacity(sampleWidth * imageHeight)
+        var redHistogram = [Int](repeating: 0, count: 256)
+        var greenHistogram = [Int](repeating: 0, count: 256)
+        var blueHistogram = [Int](repeating: 0, count: 256)
+        var sampledPixelCount = 0
 
         for y in verticalInset..<(imageHeight - verticalInset) {
             for x in startX..<imageWidth {
                 let offset = y * bytesPerRow + x * bytesPerPixel
                 guard pixels[offset + 3] > 200 else { continue }
-                reds.append(pixels[offset])
-                greens.append(pixels[offset + 1])
-                blues.append(pixels[offset + 2])
+                redHistogram[Int(pixels[offset])] += 1
+                greenHistogram[Int(pixels[offset + 1])] += 1
+                blueHistogram[Int(pixels[offset + 2])] += 1
+                sampledPixelCount += 1
             }
         }
 
-        guard !reds.isEmpty else { return nil }
-        reds.sort()
-        greens.sort()
-        blues.sort()
-        let medianIndex = reds.count / 2
+        guard sampledPixelCount > 0 else { return nil }
 
         return NSColor(
-            srgbRed: CGFloat(reds[medianIndex]) / 255,
-            green: CGFloat(greens[medianIndex]) / 255,
-            blue: CGFloat(blues[medianIndex]) / 255,
+            srgbRed: CGFloat(histogramMedian(redHistogram, count: sampledPixelCount)) / 255,
+            green: CGFloat(histogramMedian(greenHistogram, count: sampledPixelCount)) / 255,
+            blue: CGFloat(histogramMedian(blueHistogram, count: sampledPixelCount)) / 255,
             alpha: 1
         )
+    }
+
+    private func histogramMedian(_ histogram: [Int], count: Int) -> Int {
+        let target = count / 2
+        var cumulative = 0
+        for (value, frequency) in histogram.enumerated() {
+            cumulative += frequency
+            if cumulative > target {
+                return value
+            }
+        }
+        return 0
     }
 
     private func makeOverlay(for screen: NSScreen) -> (NSPanel, EmojiOverlayView) {
@@ -1187,6 +1296,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         backgroundView.addSubview(overlayView)
         panel.contentView = backgroundView
         configureBackground(of: panel)
+        panel.orderFrontRegardless()
         return (panel, overlayView)
     }
 
@@ -1205,6 +1315,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 settings.edgeAnchor == .free ? settings.backgroundOpacity : 1
         }
         backgroundView.layer?.cornerRadius = settings.cornerRadius
+        backgroundView.layer?.maskedCorners = settings.screenFrameStyleEnabled
+            ? [.layerMinXMinYCorner]
+            : [
+                .layerMinXMinYCorner,
+                .layerMaxXMinYCorner,
+                .layerMinXMaxYCorner,
+                .layerMaxXMaxYCorner
+            ]
+        let shouldShowStroke =
+            settings.screenFrameStyleEnabled && settings.screenFrameStrokeEnabled
+        backgroundView.layer?.borderWidth = shouldShowStroke ? 1 : 0
+        backgroundView.layer?.borderColor = shouldShowStroke
+            ? NSColor(white: 0.28, alpha: 1).cgColor
+            : nil
+        backgroundView.layer?.masksToBounds = true
     }
 
     private func overlayFrame(for screen: NSScreen) -> NSRect {
@@ -1413,7 +1538,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func showSettings() {
         if settingsController == nil {
-            settingsController = SettingsWindowController(settings: settings)
+            settingsController = SettingsWindowController(
+                settings: settings,
+                updaterController: updaterController
+            )
         }
         settingsController?.present()
     }
