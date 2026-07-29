@@ -1,5 +1,6 @@
 import AppKit
 import CoreAudio
+import Sparkle
 
 @_silgen_name("CGWindowListCreateImage")
 private func legacyWindowListCreateImage(
@@ -643,15 +644,20 @@ private final class EmojiOverlayView: NSView {
 
 private final class SettingsWindowController: NSWindowController, NSTextFieldDelegate {
     private let settings: OverlaySettings
+    private let updaterController: SPUStandardUpdaterController
     private var valueLabels: [Int: NSTextField] = [:]
     private weak var positionPresetButton: NSPopUpButton?
     private weak var edgeAnchorControl: NSSegmentedControl?
 
-    init(settings: OverlaySettings) {
+    init(
+        settings: OverlaySettings,
+        updaterController: SPUStandardUpdaterController
+    ) {
         self.settings = settings
+        self.updaterController = updaterController
 
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 430, height: 770),
+            contentRect: NSRect(x: 0, y: 0, width: 430, height: 825),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -836,6 +842,28 @@ private final class SettingsWindowController: NSWindowController, NSTextFieldDel
         screenFrameStroke.state = settings.screenFrameStrokeEnabled ? .on : .off
         stack.addArrangedSubview(row(label: "Çerçeve çizgisi", control: screenFrameStroke))
 
+        let automaticUpdates = NSButton(
+            checkboxWithTitle: "Otomatik indir ve yükle",
+            target: self,
+            action: #selector(automaticUpdatesChanged(_:))
+        )
+        automaticUpdates.state =
+            updaterController.updater.automaticallyChecksForUpdates ? .on : .off
+
+        let checkForUpdates = NSButton(
+            title: "Şimdi denetle",
+            target: self,
+            action: #selector(checkForUpdates)
+        )
+
+        let updateControls = NSStackView()
+        updateControls.orientation = .horizontal
+        updateControls.spacing = 8
+        updateControls.addArrangedSubview(automaticUpdates)
+        updateControls.addArrangedSubview(NSView())
+        updateControls.addArrangedSubview(checkForUpdates)
+        stack.addArrangedSubview(row(label: "Güncellemeler", control: updateControls))
+
         let buttons = NSStackView()
         buttons.orientation = .horizontal
         buttons.spacing = 10
@@ -991,6 +1019,16 @@ private final class SettingsWindowController: NSWindowController, NSTextFieldDel
         settings.screenFrameStrokeEnabled = sender.state == .on
     }
 
+    @objc private func automaticUpdatesChanged(_ sender: NSButton) {
+        let enabled = sender.state == .on
+        updaterController.updater.automaticallyChecksForUpdates = enabled
+        updaterController.updater.automaticallyDownloadsUpdates = enabled
+    }
+
+    @objc private func checkForUpdates() {
+        updaterController.checkForUpdates(nil)
+    }
+
     @objc private func closeSettings() {
         close()
     }
@@ -1003,6 +1041,11 @@ private final class SettingsWindowController: NSWindowController, NSTextFieldDel
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let settings = OverlaySettings()
+    private lazy var updaterController = SPUStandardUpdaterController(
+        startingUpdater: true,
+        updaterDelegate: nil,
+        userDriverDelegate: nil
+    )
     private var overlays: [NSPanel] = []
     private var overlayViews: [EmojiOverlayView] = []
     private var refreshTimer: Timer?
@@ -1011,6 +1054,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var lastMenuBarSampleDate = Date.distantPast
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        _ = updaterController
         settings.onChange = { [weak self] in
             self?.refreshOverlays()
         }
@@ -1494,7 +1538,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func showSettings() {
         if settingsController == nil {
-            settingsController = SettingsWindowController(settings: settings)
+            settingsController = SettingsWindowController(
+                settings: settings,
+                updaterController: updaterController
+            )
         }
         settingsController?.present()
     }

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss
+    version="2.0"
+    xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"
+>
+    <channel>
+        <title>ClockScrambler Updates</title>
+        <link>https://github.com/benfirad/ClockScrambler</link>
+        <description>Signed ClockScrambler releases for macOS.</description>
+        <language>tr</language>
+    </channel>
+</rss>

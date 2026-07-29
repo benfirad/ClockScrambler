@@ -42,6 +42,7 @@ system files.
 - Use calibrated orange while the microphone is active
 - Use calibrated purple while screen sharing or recording is active
 - Launch as an accessory app without a Dock icon
+- Check GitHub releases automatically and install signed updates with Sparkle
 
 ## Screenshot
 
@@ -51,9 +52,8 @@ system files.
 
 ClockScrambler is designed to work locally:
 
-- No analytics
-- No accounts
-- No network requests
+- No analytics, accounts, or background services
+- The only network request is Sparkle's update check against this repository
 - No audio recording
 - No microphone permission
 - No Screen Recording permission
@@ -70,7 +70,7 @@ transmitted.
 
 1. Open the repository's
    [Releases](https://github.com/benfirad/ClockScrambler/releases) page.
-2. Download `ClockScrambler-1.6-macOS.zip`.
+2. Download the latest `ClockScrambler-macOS.zip`.
 3. Move `ClockScrambler.app` to `/Applications`.
 4. Launch it and click the menu bar overlay to open settings.
 

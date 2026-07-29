@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8
+
+- Added signed Sparkle updates backed by the GitHub release feed.
+- Added automatic-update and manual “check now” controls to settings.
+- Automatic update checks run once per day and can be disabled.
+
 ## 1.7.0
 
 - Added an optional screen-frame style with a permanent black fill, subtle
