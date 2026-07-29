@@ -1,0 +1,15 @@
+# Changelog
+
+## 1.6.0
+
+- Added live clock-area background sampling that follows wallpaper and Space
+  changes.
+- Fixed full-screen detection and preserved the normal menu bar height while
+  full-screen apps hide the system menu bar.
+- Added automatic digital/analog clock detection.
+- Added automatic and manual clock-cover width controls.
+- Added calibrated microphone and screen-sharing colors.
+- Added Turkish, Spanish, and English natural-language clocks.
+- Added configurable emoji, size, rotation, position, opacity, and corner
+  pinning.
+- Added the hands-over-eyes monkey application icon.
