@@ -34,6 +34,9 @@ system files.
 - Pin the overlay flush to the upper-left or upper-right corner
 - Adjust text or emoji size, rotation, position, and opacity
 - Match the real clock-area background once per second
+- Optional low-resource screen-frame mode with a black fill, subtle stroke,
+  and rounded bottom-left corner
+- Show or hide the screen-frame stroke independently
 - Refresh automatically after wallpaper and Space changes
 - Turn pure black above a full-screen app
 - Use calibrated orange while the microphone is active
