@@ -1,8 +1,16 @@
 # ClockScrambler
 
-[![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?logo=apple)](https://www.apple.com/macos/)
-[![Swift 6](https://img.shields.io/badge/Swift-6-F05138?logo=swift&logoColor=white)](https://www.swift.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+<p align="center">
+  <img src="docs/hero.svg" width="100%" alt="ClockScrambler — customizable privacy-aware macOS clock overlay">
+</p>
+
+<p align="center">
+  <a href="https://github.com/benfirad/ClockScrambler/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/benfirad/ClockScrambler?style=flat-square&color=ff9f0a"></a>
+  <img alt="macOS 15+" src="https://img.shields.io/badge/macOS-15%2B-111111?style=flat-square&logo=apple&logoColor=white">
+  <img alt="Swift 6" src="https://img.shields.io/badge/Swift-6-f05138?style=flat-square&logo=swift&logoColor=white">
+  <img alt="Local only" src="https://img.shields.io/badge/privacy-local_only-bf5af2?style=flat-square">
+  <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-ff9f0a?style=flat-square"></a>
+</p>
 
 ClockScrambler is a lightweight, open-source macOS menu bar utility that covers
 the system clock with a customizable emoji, digital time, or natural-language
