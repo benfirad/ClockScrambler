@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="560" viewBox="0 0 1440 560" role="img" aria-labelledby="title desc">
+  <title id="title">ClockScrambler</title>
+  <desc id="desc">A customizable privacy-aware clock overlay for the macOS menu bar.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#080808"/><stop offset="1" stop-color="#242026"/></linearGradient>
+    <linearGradient id="privacy" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#ff9f0a"/><stop offset="1" stop-color="#bf5af2"/></linearGradient>
+  </defs>
+  <rect width="1440" height="560" rx="36" fill="url(#bg)"/>
+  <g font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif">
+    <text x="72" y="104" fill="#ff9f0a" font-size="23" font-weight="700">YOUR CLOCK. YOUR CORNER.</text>
+    <text x="72" y="224" fill="#f7f7f7" font-size="78" font-weight="800">ClockScrambler</text>
+    <text x="76" y="282" fill="#bcb8bf" font-size="27">Make the macOS menu bar clock look like yours.</text>
+    <text x="76" y="448" fill="#8c8790" font-size="19">EMOJI • DIGITAL • NATURAL LANGUAGE • PRIVACY COLORS • LOCAL ONLY</text>
+  </g>
+  <g transform="translate(880 86)">
+    <rect width="420" height="84" rx="24" fill="#0d0d0e" stroke="#454149" stroke-width="2"/>
+    <circle cx="34" cy="42" r="7" fill="#ff9f0a"/>
+    <circle cx="60" cy="42" r="7" fill="#bf5af2"/>
+    <text x="102" y="54" fill="#f7f7f7" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="36" font-weight="700">17:30  🌙</text>
+    <g transform="translate(0 122)">
+      <rect width="420" height="214" rx="28" fill="#151416" stroke="#37343a" stroke-width="2"/>
+      <text x="28" y="48" fill="#8c8790" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16">CLOCK STYLE</text>
+      <rect x="28" y="70" width="364" height="56" rx="15" fill="#242126"/>
+      <text x="48" y="106" fill="#f7f7f7" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="20">Written • “half past five”</text>
+      <rect x="28" y="144" width="174" height="44" rx="22" fill="#ff9f0a"/><text x="71" y="173" fill="#14110c" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="700">MIC ACTIVE</text>
+      <rect x="218" y="144" width="174" height="44" rx="22" fill="#bf5af2"/><text x="247" y="173" fill="#160d1d" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="700">SCREEN SHARE</text>
+    </g>
+  </g>
+  <rect x="880" y="504" width="420" height="4" rx="2" fill="url(#privacy)"/>
+</svg>
